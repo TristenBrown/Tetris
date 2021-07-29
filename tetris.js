@@ -1,22 +1,31 @@
+//When the page loads, the play button is clickable
 $(function(){
     $('#playButton').click(function(){
        play(); 
     });
 });
 
+//function called when a game starts
 function play(){
+    //first four entries in the array represent where each block of the piece are. currentPiece[4] represents which piece it is (more on that in the getRandomPieceArray function) and currentPiece[5] represents the orientation of that piece
     var currentPiece = [0, 0, 0, 0, 0, 0];
     var score = 0;
     var speed = 600;
+    //variable that will be used when pressing the down key
     var downPressed = false;
     $('#playButton').remove();
+    //sets up the grid that tetris will be played in
     for(var i = 1; i < 201; i++){
         $('#mainBox').append("<div class=\"grid-item\" id=\"box" + i + "\"></div>");
     }
     $('#score').html("Score: 0");
+    //we get a random piece
     currentPiece = getRandomPieceArray();
+    //we color the piece so that it is visible
     currentPiece = colorAll(currentPiece, 1);
+    //interval is used to make the piece fall
     var fall = setInterval(intervalFunction, speed);
+    //event listener listens for key presses
     window.addEventListener("keydown", handleKeys, true);
     
     //function is defined in play function in order to facilitate adding and removing the handleKeys eventlistener without having currentPiece as a global variable
@@ -29,15 +38,18 @@ function play(){
       switch (event.key) {
         case "ArrowDown":
           // code for "down arrow" key press.
+              //using downPressed in this manner prevents the piece from freezing while the interval is rapidly removed and added 
               if(!downPressed){
                   downPressed = true;
                   clearInterval(fall);
                   fall = setInterval(intervalFunction, 100);
+                  //event listener that waits for a key to be released (we're concerned with the down key)
                   window.addEventListener("keyup", releaseDown, true);
               }
           break;
         case "ArrowUp":
           // code for "up arrow" key press.
+            //The initial switch is to check which piece we're looking at. Once we find it, the nested switch is to check what the current orientation of that piece is. After doing this, we can rotate the piece with the appropriate offsets
               switch(currentPiece[4]){
                   // Square piece
                   case 0:{
@@ -193,9 +205,11 @@ function play(){
               }
           break;
         case "ArrowLeft":
-          // code for "left arrow" key press.
+            // code for "left arrow" key press.
+            //remove color from piece
             currentPiece = colorAll(currentPiece, 0);
-           for(var i = 0; i < 4; i++){
+            //check if any of the pieces are on the left most column or if there's a colored block to its left
+            for(var i = 0; i < 4; i++){
                if((((currentPiece[i] - 1) % 10) == 0) || isColored(currentPiece, currentPiece[i], -1)){
                    i--;
                    for(; i >= 0; i--){
@@ -205,11 +219,14 @@ function play(){
                }
                 currentPiece[i] = currentPiece[i] - 1;
             }
+            //currentPiece has been moved (or not) and is colored
             currentPiece = colorAll(currentPiece, 1);
           break;
         case "ArrowRight":
           // code for "right arrow" key press.
-              currentPiece = colorAll(currentPiece, 0);
+          //remove color from piece
+          currentPiece = colorAll(currentPiece, 0);
+          //check if any of the pieces are on the right most column or if there's a colored block to its right
            for(var i = 0; i < 4; i++){
                if(((currentPiece[i] % 10) == 0) || isColored(currentPiece, currentPiece[i], 1)){
                    i--;
@@ -220,13 +237,16 @@ function play(){
                }
                 currentPiece[i] = currentPiece[i] + 1;
             }
+            //current piece has been moved (or not) and is colored
             currentPiece = colorAll(currentPiece, 1);
           break;
           case " ":
               // code for space key press
               var i = 10;
+              //while piece can be placed i levels down
               while(pieceCanMove(currentPiece, i, i, i, i)){
                   j = i + 10;
+                  //if piece can't be placed i levels down plus 1, we place the piece i levels down
                   if(!pieceCanMove(currentPiece, j, j, j, j)){
                       currentPiece = colorAll(currentPiece, 0);
                      for(var k = 0; k < 4; k++){
@@ -244,6 +264,7 @@ function play(){
       event.preventDefault();
     }
     
+    //used for down key functionality in order to return the piece to its normal speed
     function releaseDown(){
                       clearInterval(fall);
                       fall = setInterval(intervalFunction, speed);
@@ -251,22 +272,31 @@ function play(){
                       window.removeEventListener("keyup", releaseDown);
     }
     
+    //function called that makes the piece fall with an interval that gets faster and faster
     function intervalFunction(){
+        //max interval delay is set to 100ms
         if(speed >= 100){
             speed = 600 - score/100;
         }
+        //variable used to check if we've lost
         var lost = false;
         currentPiece = colorAll(currentPiece, 0);
+        //checks whether each block in the piece has hit either the bottom or another piece
         for(var i = 0; i < 4; i++){
             if((currentPiece[i] + 10 > 200) || (isColored(currentPiece, currentPiece[i], 10))){
                 for(i--; i >= 0; i--){
                        currentPiece[i] = currentPiece[i] - 10;
                    }
                 currentPiece = colorAll(currentPiece, 1);
+                //score will increase if a line is cleared via doClear
                 score = score + doClear(currentPiece);
+                //updates the score presented to the user (only changes if a line is cleared)
                 updateScore(score);
+                //get a new piece
                 currentPiece = getRandomPieceArray();
+                //check if placing the new piece would make you lose
                 if(didLose(currentPiece)){
+                    //wrap things up so that we can begin again if the user presses play once more
                     handleLoss(currentPiece, fall);
                     lost = true;
                     window.removeEventListener("keyup", releaseDown, true);
@@ -278,14 +308,17 @@ function play(){
                 currentPiece[i] = currentPiece[i] + 10;
             }
         }
+        //if no loss occurs, the game continues
         if(!lost){
             currentPiece = colorAll(currentPiece, 1);
         }
     }
 }
 
-
+//function called to set currentPiece to a random piece
 function getRandomPieceArray(){
+    //each piece's offset, where each block is in relation to one another
+    //first four elements in each array are the actual offset, 5th represents the piece, and 6th is the piece's orientation
     var squareOffset = [0, 1, 10, 11, 0, 0];
     var lineOffset = [0, 10, 20, 30, 1, 0];
     var zOffset = [0, 1, 11, 12, 2, 0];
@@ -294,7 +327,10 @@ function getRandomPieceArray(){
     var lOffset = [0, 1, 11, 21, 5, 0];
     var tOffset = [0, 9, 10, 11, 6, 0];
     var currentPiece = [0, 0, 0, 0, 0, 0];
+    //get a random number between 1 and 7
     var num = Math.floor(Math.random() * 7 + 1);
+    //depending on the random number, we set the currentPiece to the corresponding piece's offset 
+    //we add five to the offset in order to center each piece
     switch(num){
         case 1:{
             for(var i = 0; i < 4; i++){
@@ -349,9 +385,10 @@ function getRandomPieceArray(){
     return currentPiece;
 }
 
-//colors all current pieces red, if x is 1, and blue if not
+//colors all current pieces if x is 1 and blue if not
 function colorAll(currentPiece, x){
     if(x == 1){
+        //switch is used to identify the piece and give it the corresponding color
         switch(currentPiece[4]){
             case 0:{
                 for(var i = 0; i < 4; i++){
@@ -405,29 +442,35 @@ function colorAll(currentPiece, x){
     return currentPiece;
 }
 
-//check if a space is colored
+//check if a space where a block of the currentPiece would move is colored
 function isColored(currentPiece, currentBlock, offset){
+    //if space is black, return false
     if(($("#box" + (currentBlock + offset)).css("background-color") == "rgba(0, 0, 0, 0)") || ($("#box" + (currentBlock + offset)).css("background-color") == "rgb(0, 0, 0)")){
         return false;
     }
     else{
+        //if space is part of our currentPiece, return false
         for(var i = 0; i < 4; i++){
             if(currentPiece[i] == currentBlock + offset){
                 return false;
             }
         }
+        //in all other cases return true
         return true;
     }
 }
 
+//checks whether an entire piece can move, also accounts for if it would overflow from the side (happens during rotations)
 function pieceCanMove(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour){
     //checking if any pieces are colored
     if((isColored(currentPiece, currentPiece[0], offsetOne)) || (isColored(currentPiece, currentPiece[1], offsetTwo)) || (isColored(currentPiece, currentPiece[2], offsetThree)) || (isColored(currentPiece, currentPiece[3], offsetFour))){
         return false;
     }
+    //checks if any blocks would be below the bottom
     else if((currentPiece[0] + offsetOne > 200) || (currentPiece[1] + offsetTwo > 200) || (currentPiece[2] + offsetThree > 200) || (currentPiece[3] + offsetFour > 200)){
             return false;
     }
+    //checks if the piece would overflow from the side of the playing field
     else if(sideOverflow(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour)){
         return false;
     }
@@ -436,6 +479,7 @@ function pieceCanMove(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFou
     }
 }
 
+//Assuming the piece can rotate, rotates a piece clockwise
 function rotatePiece(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour){
     colorAll(currentPiece, 0);
     if(pieceCanMove(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour)){
@@ -444,6 +488,7 @@ function rotatePiece(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour
         currentPiece[2] = currentPiece[2] + offsetThree;
         currentPiece[3] = currentPiece[3] + offsetFour;
         colorAll(currentPiece, 1);
+        //if orientation of piece is in the fourth position, return to the first position (has fully rotated)
         if(currentPiece[5] == 3){
             currentPiece[5] = 0;
         }
@@ -459,6 +504,7 @@ function rotatePiece(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour
 //check if a rotation rotates over the side
 function sideOverflow(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour){
     var offset = [offsetOne, offsetTwo, offsetThree, offsetFour];
+    //checks whether any two block would be on opposite sides of the playing field (normally impossible but happens during the overflow)
     for(var i = 0; i < 4; i++){
         if((currentPiece[i] % 10 == 0) || (currentPiece[i] % 10 == 9)){
             if(((currentPiece[i] + offset[i]) % 10 == 1) || ((currentPiece[i] + offset[i]) % 10 == 2)){
@@ -478,10 +524,13 @@ function sideOverflow(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFou
 function getClear(currentPiece){
     var pieceClear = [1, 1, 1, 1, 1, 1, 1, 1];
     for(var j = 0; j < 4; j++){
+        //math done to get the column
         var column = Math.floor((currentPiece[j] - 1)/10);
         column = column * 10;
+        //column is passed to the array 4 ahead of what is in the column
         pieceClear[j + 4] = column;
         for(var k = 1; k < 11; k++){
+            //if the column isn't complete, column isn't labeled to be cleared
             if(!isColoredMinus(currentPiece, column, k)){
                 pieceClear[j] = 0;
                 break;
@@ -492,13 +541,16 @@ function getClear(currentPiece){
 }
 
 function doClear(currentPiece){
+    //gets an array containing which columns need to be cleared
     var clearArray = getClear(currentPiece);
+    //temporary array used to seperate clearable columns from not clearable columns
     var workArray = [200, 200, 200, 200];
     for(var i = 0; i < 4; i++){
         if(clearArray[i] == 1){
             workArray[i] = clearArray[i + 4];
         }
     }
+    //array that will store sorted version of workArray
     var sortedArray = [200, 200, 200, 200];
     for(var i = 0; i < 4; i++){
         var lowest = 200;
@@ -528,6 +580,7 @@ function doClear(currentPiece){
             }
         }
     }
+    //cleares lines in order from lowest to highest and calculates score
     var score = 0;
     for(var i = 0; i < 4; i++){
         if(sortedArray[i] == 200){
@@ -540,9 +593,11 @@ function doClear(currentPiece){
     return score;
 }
 
-
+//clears a line when it is full
+//line is the column that is passed
 function clearLine(line){
     var currentLine = line;
+    //removes current line and moves all previous lines down
     while(currentLine != 0){
         prevLine = currentLine - 10;
         for(var i = 1; i < 11; i++){
@@ -556,7 +611,7 @@ function clearLine(line){
     }
 }
 
-//less strict is colored function (can be same block)
+//less strict colored function (can be same block)
 function isColoredMinus(currentPiece, currentBlock, offset){
     if(($("#box" + (currentBlock + offset)).css("background-color") == "rgba(0, 0, 0, 0)") || ($("#box" + (currentBlock + offset)).css("background-color") == "rgb(0, 0, 0)")){
         return false;
@@ -566,6 +621,7 @@ function isColoredMinus(currentPiece, currentBlock, offset){
     }
 }
 
+//checks whether the user has lost
 function didLose(currentPiece){
     for(var i = 0; i < 4; i++){
         if(!(($("#box" + currentPiece[i]).css("background-color") == "rgba(0, 0, 0, 0)") || ($("#box" + currentPiece[i]).css("background-color") == "rgb(0, 0, 0)"))){
@@ -575,6 +631,7 @@ function didLose(currentPiece){
     return false;
 }
 
+//if the user has loss, this cleans up loose ends
 function handleLoss(currentPiece, fall){
     currentPiece = null;
     for(var i = 1; i < 201; i++){
@@ -588,6 +645,7 @@ function handleLoss(currentPiece, fall){
     window.alert("You lost!");
 }
 
+//updates the score for the user to see
 function updateScore(score){
      $("#score").html("Score: " + score);
 }
