@@ -9,6 +9,7 @@ $(function(){
 function play(){
     //first four entries in the array represent where each block of the piece are. currentPiece[4] represents which piece it is (more on that in the getRandomPieceArray function) and currentPiece[5] represents the orientation of that piece
     var currentPiece = [0, 0, 0, 0, 0, 0];
+    var nextPiece = [5, 6, 15, 16, 0, 0];
     var score = 0;
     var speed = 600;
     //variable that will be used when pressing the down key
@@ -16,13 +17,19 @@ function play(){
     $('#playButton').remove();
     //sets up the grid that tetris will be played in
     for(var i = 1; i < 201; i++){
-        $('#mainBox').append("<div class=\"grid-item\" id=\"box" + i + "\"></div>");
+        $('#playBox').append("<div class=\"grid-item\" id=\"box" + i + "\"></div>");
+    }
+    for(var j = 1; j < 41; j++){
+        $('#nextBox').append("<div class=\"grid-item\" id=\"show" + j + "\"></div>");
     }
     $('#score').html("Score: 0");
     //we get a random piece
-    currentPiece = getRandomPieceArray();
+    wipeShow();
+    currentPiece = nextPiece;
+    nextPiece = getRandomPieceArray();
+    placeShow(nextPiece);
     //we color the piece so that it is visible
-    currentPiece = colorAll(currentPiece, 1);
+    currentPiece = colorAll(currentPiece, 1, 1);
     //interval is used to make the piece fall
     var fall = setInterval(intervalFunction, speed);
     //event listener listens for key presses
@@ -207,7 +214,7 @@ function play(){
         case "ArrowLeft":
             // code for "left arrow" key press.
             //remove color from piece
-            currentPiece = colorAll(currentPiece, 0);
+            currentPiece = colorAll(currentPiece, 0, 1);
             //check if any of the pieces are on the left most column or if there's a colored block to its left
             for(var i = 0; i < 4; i++){
                if((((currentPiece[i] - 1) % 10) == 0) || isColored(currentPiece, currentPiece[i], -1)){
@@ -220,12 +227,12 @@ function play(){
                 currentPiece[i] = currentPiece[i] - 1;
             }
             //currentPiece has been moved (or not) and is colored
-            currentPiece = colorAll(currentPiece, 1);
+            currentPiece = colorAll(currentPiece, 1, 1);
           break;
         case "ArrowRight":
           // code for "right arrow" key press.
           //remove color from piece
-          currentPiece = colorAll(currentPiece, 0);
+          currentPiece = colorAll(currentPiece, 0, 1);
           //check if any of the pieces are on the right most column or if there's a colored block to its right
            for(var i = 0; i < 4; i++){
                if(((currentPiece[i] % 10) == 0) || isColored(currentPiece, currentPiece[i], 1)){
@@ -238,7 +245,7 @@ function play(){
                 currentPiece[i] = currentPiece[i] + 1;
             }
             //current piece has been moved (or not) and is colored
-            currentPiece = colorAll(currentPiece, 1);
+            currentPiece = colorAll(currentPiece, 1, 1);
           break;
           case " ":
               // code for space key press
@@ -248,11 +255,11 @@ function play(){
                   j = i + 10;
                   //if piece can't be placed i levels down plus 1, we place the piece i levels down
                   if(!pieceCanMove(currentPiece, j, j, j, j)){
-                      currentPiece = colorAll(currentPiece, 0);
+                      currentPiece = colorAll(currentPiece, 0, 1);
                      for(var k = 0; k < 4; k++){
                          currentPiece[k] = currentPiece[k] + i;
                      } 
-                    currentPiece = colorAll(currentPiece, 1);
+                    currentPiece = colorAll(currentPiece, 1, 1);
                   }
                   i = j;
               }
@@ -280,20 +287,23 @@ function play(){
         }
         //variable used to check if we've lost
         var lost = false;
-        currentPiece = colorAll(currentPiece, 0);
+        currentPiece = colorAll(currentPiece, 0, 1);
         //checks whether each block in the piece has hit either the bottom or another piece
         for(var i = 0; i < 4; i++){
             if((currentPiece[i] + 10 > 200) || (isColored(currentPiece, currentPiece[i], 10))){
                 for(i--; i >= 0; i--){
                        currentPiece[i] = currentPiece[i] - 10;
                    }
-                currentPiece = colorAll(currentPiece, 1);
+                currentPiece = colorAll(currentPiece, 1, 1);
                 //score will increase if a line is cleared via doClear
                 score = score + doClear(currentPiece);
                 //updates the score presented to the user (only changes if a line is cleared)
                 updateScore(score);
-                //get a new piece
-                currentPiece = getRandomPieceArray();
+                //get a new piece and update next piece
+                wipeShow();
+                currentPiece = nextPiece;
+                nextPiece = getRandomPieceArray();
+                placeShow(nextPiece);
                 //check if placing the new piece would make you lose
                 if(didLose(currentPiece)){
                     //wrap things up so that we can begin again if the user presses play once more
@@ -310,7 +320,7 @@ function play(){
         }
         //if no loss occurs, the game continues
         if(!lost){
-            currentPiece = colorAll(currentPiece, 1);
+            currentPiece = colorAll(currentPiece, 1, 1);
         }
     }
 }
@@ -386,49 +396,56 @@ function getRandomPieceArray(){
 }
 
 //colors all current pieces if x is 1 and blue if not
-function colorAll(currentPiece, x){
+function colorAll(currentPiece, x, y){
+    var chosenGrid = "";
+    if(y == 1){
+        chosenGrid = "box";
+    }
+    else{
+        chosenGrid = "show";
+    }
     if(x == 1){
         //switch is used to identify the piece and give it the corresponding color
         switch(currentPiece[4]){
             case 0:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "yellow");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "yellow");
                 }
                 break;
             }
             case 1:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "aqua");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "aqua");
                 }
                 break;
             }
             case 2:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "red");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "red");
                 }
                 break;
             }
             case 3:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "lime");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "lime");
                 }
                 break;
             }
             case 4:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "blue");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "blue");
                 }
                 break;
             }
             case 5:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "orange");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "orange");
                 }
                 break;
             }
             case 6:{
                 for(var i = 0; i < 4; i++){
-                    $("#box" + currentPiece[i]).css("background-color", "mediumpurple");
+                    $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "mediumpurple");
                 }
                 break;
             }
@@ -436,7 +453,7 @@ function colorAll(currentPiece, x){
     }
     else{
         for(var i = 0; i < 4; i++){
-            $("#box" + currentPiece[i]).css("background-color", "black");
+            $("#" + chosenGrid + "" + currentPiece[i]).css("background-color", "black");
         }
     }
     return currentPiece;
@@ -481,13 +498,13 @@ function pieceCanMove(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFou
 
 //Assuming the piece can rotate, rotates a piece clockwise
 function rotatePiece(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour){
-    colorAll(currentPiece, 0);
+    colorAll(currentPiece, 0, 1);
     if(pieceCanMove(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour)){
         currentPiece[0] = currentPiece[0] + offsetOne;
         currentPiece[1] = currentPiece[1] + offsetTwo;
         currentPiece[2] = currentPiece[2] + offsetThree;
         currentPiece[3] = currentPiece[3] + offsetFour;
-        colorAll(currentPiece, 1);
+        colorAll(currentPiece, 1, 1);
         //if orientation of piece is in the fourth position, return to the first position (has fully rotated)
         if(currentPiece[5] == 3){
             currentPiece[5] = 0;
@@ -497,7 +514,7 @@ function rotatePiece(currentPiece, offsetOne, offsetTwo, offsetThree, offsetFour
         }
     }
     else{
-        colorAll(currentPiece, 1);
+        colorAll(currentPiece, 1, 1);
     }
 }
 
@@ -638,14 +655,63 @@ function handleLoss(currentPiece, fall){
         $('#box' + i).css("background-color", "black");
     }
     clearInterval(fall);
-    $('#mainBox').empty();
+    $('#playBox').empty();
+    $('#nextBox').empty();
     $('#score').html("Tetris");
     //add play button back
-    $("#mainBox").append("<input type=\"button\" value=\"Play\" onclick=\"play()\" id=\"playButton\">");
+    $("#playBox").append("<input type=\"button\" value=\"Play\" onclick=\"play()\" id=\"playButton\">");
     window.alert("You lost!");
 }
 
 //updates the score for the user to see
 function updateScore(score){
      $("#score").html("Score: " + score);
+}
+
+function placeShow(currentPiece){
+    let showPiece = [0, 0, 0, 0, 0, 0];
+    switch(currentPiece[4]){
+        case 0:{
+            console.log("square");
+            showPiece = [12, 13, 17, 18, 0, 0];
+            break;
+        }
+        case 1:{
+            console.log("line");
+            showPiece = [13, 18, 23, 28, 1, 0];
+            break;
+        }
+        case 2:{
+            console.log("z");
+            showPiece = [17, 18, 23, 24, 2, 0];
+            break;
+        }
+        case 3:{
+            console.log("backZ");
+            showPiece = [18, 19, 22, 23, 3, 0];
+            break;
+        }
+        case 4:{
+            console.log("R");
+            showPiece = [12, 13, 17, 22, 4, 0];
+            break;
+        }
+        case 5:{
+            console.log("L");
+            showPiece = [12, 13, 18, 23, 5, 0];
+            break;
+        }
+        case 6:{
+            console.log("T");
+            showPiece = [13, 17, 18, 19, 6, 0];
+            break;
+        }
+    }
+    colorAll(showPiece, 1, 0);
+}
+
+function wipeShow(){
+    for(var k = 1; k < 41; k++){
+        $('#show' + k).css("background-color", "black");
+    }
 }

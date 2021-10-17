@@ -3,14 +3,21 @@ body{
     padding-top: 2vh;
 }
 #mainBox{
-    margin-top: 2vh;
     margin-left: auto;
     margin-right: auto;
+    width: 825px;
+}
+#playBox{
+    margin-top: 2vh;
+    margin-left: 0px;
+    margin-right: 10px;
     width: 400px;
     height: 800px;
+    float: left;
+    clear: left;
     border: 1px solid black;
     background-color: black;
-    display: grid;
+    display: inline-grid;
     grid-template-columns: auto auto auto auto auto auto auto auto auto auto;
 }
 #playButton{
@@ -20,6 +27,22 @@ body{
     margin-top: 300px;
     margin-left: 100px;
     margin-right: 100px;
+}
+#showCase{
+    float: left;
+    clear: right;
+    margin 0px;
+    padding: 0px;
+    display: inline-block;
+    text-align: center;
+}
+#nextBox{
+    width: 200px;
+    height: 200px;
+    margin: 0px;
+    background-color: black;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
 }
 .grid-item{
     text-align: center;
