@@ -38,7 +38,7 @@ body{
 }
 #nextBox{
     width: 200px;
-    height: 200px;
+    height: 250px;
     margin: 0px;
     background-color: black;
     display: grid;
