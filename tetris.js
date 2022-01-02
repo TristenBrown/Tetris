@@ -651,11 +651,9 @@ function didLose(currentPiece){
 //if the user has loss, this cleans up loose ends
 function handleLoss(currentPiece, fall, score){
     $.post("checkLeaderboard.php", {score: score} ,function(data){
-        if(data != null){
+        if(data != ""){
             let userName = prompt('You got a highscore! Please enter a name:');
-            $.post('updateLeaderboard.php', {score: score, userName: userName}, function(data2){
-                console.log(data2);
-            });
+            $.post('updateLeaderboard.php', {score: score, userName: userName});
         }
     });
     currentPiece = null;

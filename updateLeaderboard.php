@@ -23,35 +23,22 @@
             do{
                 if($score > $outPut['score']){
                     $newPut = $outPut;
+                    $query = "DELETE FROM leaderboard WHERE place = 10";
+                    $mysqli->query($query);
                     do{
                         $query = "UPDATE leaderboard SET place = " . ($outPut['place'] + 1) . " WHERE place = " . $outPut['place'] . " AND name = '" . $outPut['name'] . "'";
                         $mysqli->query($query);
-                        echo $query;
                     }
                     while($outPut = $mysqliResult->fetch_assoc());
                     $query = "INSERT INTO leaderboard VALUES (" . $newPut['place'] . ", '" . $name . "', " . $score . ")";
                     $mysqli->query($query);
-                    echo $query;
                     break;
-    //                $mysqli->query($query);
-    //                $query = "INSERT INTO leaderboard VALUES (" . ($outPut['place'] + 1) . ", " . $name . ", " . $score . ")";
-    //                $mysqli->query($query);
-    //                while ($outPut = $mysqliResult->fetch_assoc()) {
-    //                    if($outPut['place'] + 1 >= 11){
-    //                        $query = "DELETE FROM leaderboard WHERE place = "  . $outPut['place'] . "AND name = " . $outPut['name'];
-    //                    }
-    //                    else{
-    //                        $query = "UPDATE leaderboard SET place = " . ($outPut['place'] + 1) . "WHERE place = " . $outPut['place'] . "AND name = " . $outPut['name'];
-    //                    }
-    //                    $mysqli->query($query);
-    //                }
                 }
             }
             while ($outPut = $mysqliResult->fetch_assoc());
         }
         else{
             $query = "INSERT INTO leaderboard VALUES (1, '" . $name . "', " . $score . ")";
-            echo $query;
             $mysqli->query($query);
         }
         $mysqliResult->free();
