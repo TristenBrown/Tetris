@@ -307,7 +307,7 @@ function play(){
                 //check if placing the new piece would make you lose
                 if(didLose(currentPiece)){
                     //wrap things up so that we can begin again if the user presses play once more
-                    handleLoss(currentPiece, fall);
+                    handleLoss(currentPiece, fall, score);
                     lost = true;
                     window.removeEventListener("keyup", releaseDown, true);
                     window.removeEventListener("keydown", handleKeys, true);
@@ -649,7 +649,15 @@ function didLose(currentPiece){
 }
 
 //if the user has loss, this cleans up loose ends
-function handleLoss(currentPiece, fall){
+function handleLoss(currentPiece, fall, score){
+    $.post("checkLeaderboard.php", {score: score} ,function(data){
+        if(data != null){
+            let userName = prompt('You got a highscore! Please enter a name:');
+            $.post('updateLeaderboard.php', {score: score, userName: userName}, function(data2){
+                console.log(data2);
+            });
+        }
+    });
     currentPiece = null;
     for(var i = 1; i < 201; i++){
         $('#box' + i).css("background-color", "black");
@@ -672,37 +680,30 @@ function placeShow(currentPiece){
     let showPiece = [0, 0, 0, 0, 0, 0];
     switch(currentPiece[4]){
         case 0:{
-            console.log("square");
             showPiece = [12, 13, 17, 18, 0, 0];
             break;
         }
         case 1:{
-            console.log("line");
             showPiece = [13, 18, 23, 28, 1, 0];
             break;
         }
         case 2:{
-            console.log("z");
             showPiece = [17, 18, 23, 24, 2, 0];
             break;
         }
         case 3:{
-            console.log("backZ");
             showPiece = [18, 19, 22, 23, 3, 0];
             break;
         }
         case 4:{
-            console.log("R");
             showPiece = [12, 13, 17, 22, 4, 0];
             break;
         }
         case 5:{
-            console.log("L");
             showPiece = [12, 13, 18, 23, 5, 0];
             break;
         }
         case 6:{
-            console.log("T");
             showPiece = [13, 17, 18, 19, 6, 0];
             break;
         }
