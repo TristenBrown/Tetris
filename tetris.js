@@ -656,7 +656,7 @@ function handleLoss(currentPiece, fall, score){
 //            let userName = prompt('You got a highscore! Please enter a name:');
 //            $.post('updateLeaderboard.php', {score: score, userName: userName});
 //        }
-    });
+//    });
     currentPiece = null;
     for(var i = 1; i < 201; i++){
         $('#box' + i).css("background-color", "black");
